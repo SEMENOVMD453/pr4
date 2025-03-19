@@ -43,7 +43,7 @@ void *handle_client(void *arg) {
     char client_label[64];
     snprintf(client_label, sizeof(client_label), "%s#%d", client_ip, client_id);
 
-    log_message(client_label, "Connected", COLOR_GREEN);
+    log_message(client_label, "Игрок присоединлся к серверу", COLOR_GREEN);
 
     char buffer[MAXLINE];
     int number = rand() % 100 + 1;
@@ -100,8 +100,8 @@ void *handle_client(void *arg) {
             write(connfd, "Ниже\n", strlen("Ниже\n"));
         } else {
             write(connfd, "Правильно!\n", strlen("Правильно!\n"));
-            write(connfd, "Неверный ввод. Число может быть от 1 до 100.\n", strlen("Неверный ввод. Число может быть от 1 до 100.\n"));
-            log_message(client_label, "Client won the game", COLOR_GREEN);
+            write(connfd, "Практическая работа 4.\n", strlen("Практическая работа 4.\n"));
+            log_message(client_label, "Клиент победил", COLOR_GREEN);
             game_over = 1;
             continue;
         }
@@ -110,7 +110,7 @@ void *handle_client(void *arg) {
             char msg[64];
             snprintf(msg, sizeof(msg), "Вы проиграли! Число было %d\n", number);
             write(connfd, msg, strlen(msg));
-            write(connfd, "Неверный ввод. Число может быть от 1 до 100.\n", strlen("Неверный ввод. Число может быть от 1 до 100.\n"));
+            write(connfd, "Практическая работа 4.\n", strlen("Практическая работа 4.\n"));
             log_message(client_label, "Клиент проиграл", COLOR_RED);
             game_over = 1;
         }
@@ -175,5 +175,3 @@ int main(int argc, char **argv) {
 
     fclose(logfile);
 }
-
-
