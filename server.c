@@ -47,13 +47,20 @@ int main(int argc, char **argv) {
 
     log_message("Сервер запущен и слушает порт");
 
-    int connfd = accept(listenfd, NULL, NULL);
+    struct sockaddr_in clientaddr;
+    socklen_t clientlen = sizeof(clientaddr);
+    int connfd = accept(listenfd, (struct sockaddr *)&clientaddr, &clientlen);
     if (connfd < 0) {
         perror("accept");
         exit(1);
     }
 
-    log_message("Игрок подключился. Начинаем игру!");
+    char client_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &clientaddr.sin_addr, client_ip, INET_ADDRSTRLEN);
+
+    char log_msg[128];
+    snprintf(log_msg, sizeof(log_msg), "Игрок подключился: %s", client_ip);
+    log_message(log_msg);
 
     char buffer[MAXLINE];
     int number = rand() % 100 + 1;
@@ -63,21 +70,25 @@ int main(int argc, char **argv) {
         memset(buffer, 0, MAXLINE);
         ssize_t n = read(connfd, buffer, MAXLINE - 1);
         if (n <= 0) {
-            log_message("Клиент отключился.");
+            snprintf(log_msg, sizeof(log_msg), "Клиент (%s) отключился.", client_ip);
+            log_message(log_msg);
             break;
         }
 
         buffer[strcspn(buffer, "\n")] = '\0';
-        log_message(buffer);
+        snprintf(log_msg, sizeof(log_msg), "Клиент (%s) отправил: %s", client_ip, buffer);
+        log_message(log_msg);
 
         if (strncmp(buffer, "/quit", 5) == 0) {
-            log_message("Клиент покинул игру.");
+            snprintf(log_msg, sizeof(log_msg), "Клиент (%s) покинул игру.", client_ip);
+            log_message(log_msg);
             break;
         } else if (strncmp(buffer, "/restart", 8) == 0) {
             number = rand() % 100 + 1;
             attempts = 0;
             write(connfd, "Новая игра началась!\n", 22);
-            log_message("Игра перезапущена.");
+            snprintf(log_msg, sizeof(log_msg), "Клиент (%s) перезапустил игру.", client_ip);
+            log_message(log_msg);
             continue;
         }
 
@@ -86,13 +97,16 @@ int main(int argc, char **argv) {
 
         if (guess < number) {
             write(connfd, "Выше\n", 12);
-            log_message("Игрок ввел число. Ответ: Выше");
+            snprintf(log_msg, sizeof(log_msg), "Клиент (%s) ввел %d. Ответ: Выше", client_ip, guess);
+            log_message(log_msg);
         } else if (guess > number) {
             write(connfd, "Ниже\n", 12);
-            log_message("Игрок ввел число. Ответ: Ниже");
+            snprintf(log_msg, sizeof(log_msg), "Клиент (%s) ввел %d. Ответ: Ниже", client_ip, guess);
+            log_message(log_msg);
         } else {
             write(connfd, "Правильно!\n", 12);
-            log_message("Игрок угадал число!");
+            snprintf(log_msg, sizeof(log_msg), "Клиент (%s) угадал число!", client_ip);
+            log_message(log_msg);
             break;
         }
 
@@ -100,7 +114,8 @@ int main(int argc, char **argv) {
             char msg[64];
             snprintf(msg, sizeof(msg), "Вы проиграли! Число было %d\n", number);
             write(connfd, msg, strlen(msg));
-            log_message("Игрок проиграл игру.");
+            snprintf(log_msg, sizeof(log_msg), "Клиент (%s) проиграл игру.", client_ip);
+            log_message(log_msg);
             break;
         }
     }
